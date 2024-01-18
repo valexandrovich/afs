@@ -19,12 +19,23 @@ onMounted(() => {
       })
 })
 
+const initStoredJob = (storedJobId) => {
+  console.log(storedJobId)
+}
+
 </script>
 
 <template>
-<h1>Scheduler</h1>
+<h1 class="bg-amber-200">Scheduler</h1>
 
-  {{state.storedJobs}}
+
+  <div class="flex flex-col">
+    <div class="flex flex-row gap-4" v-for="job in state.storedJobs" :key="job.id">
+      <span>{{job.id}} - {{job.name}} - {{job.description}}</span>
+      <button @click="initStoredJob(job.id)">Start</button>
+    </div>
+
+  </div>
 
 </template>
 
