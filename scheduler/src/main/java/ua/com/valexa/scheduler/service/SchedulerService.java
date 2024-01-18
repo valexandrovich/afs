@@ -65,8 +65,8 @@ public class SchedulerService {
 
             switch (ss.getServiceName()) {
                 case "downloader": {
-                    log.debug("Sending to : " + "ismc-downloader : "  + stepRequestDto);
-                    rabbitTemplate.convertAndSend("ismc-downloader", stepRequestDto);
+                    log.debug("Sending to : " + "downloader : "  + stepRequestDto);
+                    rabbitTemplate.convertAndSend("downloader", stepRequestDto);
                     break;
                 }
             }

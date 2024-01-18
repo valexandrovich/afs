@@ -1,33 +1,23 @@
-package ua.com.valexa.scheduler.configuration;
+package ua.com.valexa.downloader.configuration;
 
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMqConfig {
-
-    @Value("${scheduler-init-queue}")
-    private String schedulerInitQueue;
-
-    @Value("${scheduler-response-queue}")
-    private String schedulerResponseQueue;
-
-
-
     @Bean
-    public Queue initQueue() {
-        return new Queue(schedulerInitQueue, true);
+    public Queue requestQueue() {
+        return new Queue("downloader", true);
     }
 
     @Bean
-    public Queue responseQueue() {
-        return new Queue(schedulerResponseQueue, true);
+    public Queue manageQueue() {
+        return new Queue("downloader-manage", true);
     }
 
 
@@ -42,5 +32,4 @@ public class RabbitMqConfig {
         rabbitTemplate.setMessageConverter(jsonMessageConverter());
         return rabbitTemplate;
     }
-
 }
