@@ -11,10 +11,10 @@ public class Properties {
     @Value("${downloader.mountPoint}")
     private String mountPoint;
 
-    @Value("${downloader.proxyHost}")
+    @Value("${proxyHost}")
     private String proxyHost;
 
-    @Value("${downloader.proxyPort}")
+    @Value("${proxyPort}")
     private Integer proxyPort;
 
 
