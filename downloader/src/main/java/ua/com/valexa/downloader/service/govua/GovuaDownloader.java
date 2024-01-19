@@ -146,6 +146,7 @@ public class GovuaDownloader implements Downloadable {
         StepUpdateDto stepUpdateDto = new StepUpdateDto();
         stepUpdateDto.setStatus(StepStatus.IN_PROCESS);
         stepUpdateDto.setStepId(stepId);
+        stepUpdateDto.setComment("Завантаження файлу");
         Proxy proxy = null;
         long fileSize = 0;
         try {
@@ -208,6 +209,7 @@ public class GovuaDownloader implements Downloadable {
                             startByte += bytesRead;
 
                             stepUpdateDto.setProgress((double) totalBytesRead / fileSize);
+                            stepUpdateDto.setComment("Завантаження файлу: " + totalBytesRead / 1024 / 1024 + " MB / " + fileSize / 1024 /1024 + " MB");
                             sendUpdate(stepUpdateDto);
 
 
