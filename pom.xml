@@ -28,6 +28,7 @@
         <module>cpms</module>
         <module>scheduler</module>
         <module>downloader</module>
+        <module>web-backend</module>
     </modules>
 
 </project>

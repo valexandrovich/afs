@@ -4,5 +4,6 @@ public enum StepStatus {
     NEW,
     IN_PROCESS,
     FAILED,
+    SKIPED,
     FINISHED
 }
