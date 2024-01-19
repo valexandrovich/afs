@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import SchedulerView from "@/views/SchedulerView.vue";
+import ProgressView from "@/views/ProgressView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,6 +15,11 @@ const router = createRouter({
       path: '/scheduler',
       name: 'scheduler',
       component: SchedulerView
+    },
+    {
+      path: '/progress',
+      name: 'progress',
+      component: ProgressView
     }
   ]
 })

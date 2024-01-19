@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
@@ -14,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import ua.com.valexa.common.dto.sys.StepResponseDto;
+import ua.com.valexa.common.dto.sys.StepUpdateDto;
 import ua.com.valexa.db.model.enums.StepStatus;
 import ua.com.valexa.downloader.configuration.Properties;
 import ua.com.valexa.downloader.service.Downloadable;
@@ -44,6 +46,11 @@ public class GovuaDownloader implements Downloadable {
     RestTemplate restTemplate = new RestTemplate();
     ObjectMapper mapper = new ObjectMapper();
 
+    @Autowired
+    RabbitTemplate rabbitTemplate;
+
+
+
     public GovuaDownloader(Properties properties) {
         this.properties = properties;
     }
@@ -51,10 +58,12 @@ public class GovuaDownloader implements Downloadable {
 
     @Override
     public StepResponseDto handleDownload(Long stepId, Map<String, String> parameters) {
-
-
-        System.out.println(properties.getMountPoint());
-
+        StepUpdateDto stepUpdateDto = new StepUpdateDto();
+        stepUpdateDto.setStepId(stepId);
+        stepUpdateDto.setStatus(StepStatus.IN_PROCESS);
+        stepUpdateDto.setProgress(0.0);
+        stepUpdateDto.setComment("Початок завантаження");
+        sendUpdate(stepUpdateDto);
 
 
         StepResponseDto stepResponseDto = new StepResponseDto();
@@ -62,22 +71,44 @@ public class GovuaDownloader implements Downloadable {
 
         try {
             log.debug("Parsing Step Request parameters");
+            stepUpdateDto.setComment("Отримання метадати джерела");
+            sendUpdate(stepUpdateDto);
             RequestMetadata requestMetadata = new RequestMetadata(stepId, parameters);
             log.debug("Getting package metadata " + requestMetadata.getSourceName());
+            stepUpdateDto.setComment("Отримання метадати пакету");
+            sendUpdate(stepUpdateDto);
             JsonNode packageMetadata = getPackageMetadata(requestMetadata.getPackageId());
             log.debug("Getting actual resource id " + requestMetadata.getSourceName());
+            stepUpdateDto.setComment("Отримання актуального ресурсу");
+            sendUpdate(stepUpdateDto);
             String actualResourceId = getActualResourceId(packageMetadata);
             log.debug("Getting actual revision metadata " + requestMetadata.getSourceName());
+            stepUpdateDto.setComment("Отримання метадати ресурсу");
+            sendUpdate(stepUpdateDto);
             GovUaRevisionMetadata metadata = getActualRevisionMetadata(actualResourceId);
             String fileName = properties.getMountPoint() + System.getProperty("file.separator") + stepId + "_" + requestMetadata.getSourceName() + "." + metadata.getFileExtension();
             log.debug("Downloading file " + fileName + "  :  " + requestMetadata.getSourceName() + "; Link " + metadata.getFileUrl());
-            downloadFile(metadata.fileUrl.toString(), fileName);
+            stepUpdateDto.setComment("Завантаження файлу");
+            sendUpdate(stepUpdateDto);
+            downloadFile(metadata.fileUrl.toString(), fileName, stepId);
             stepResponseDto.getResults().put("file", fileName);
-            stepResponseDto.setComment("Файл завантажено");
+//            stepResponseDto.setComment("Файл завантажено");
             stepResponseDto.setStatus(StepStatus.FINISHED);
+
+
+            stepUpdateDto.setComment("Файл завантажено");
+            stepUpdateDto.setProgress(1);
+            stepUpdateDto.setStatus(StepStatus.FINISHED);
+            sendUpdate(stepUpdateDto);
         } catch (Exception e) {
             stepResponseDto.setStatus(StepStatus.FAILED);
-            stepResponseDto.setComment(e.getMessage());
+//            stepResponseDto.setComment(e.getMessage());
+
+            stepUpdateDto.setComment(e.getMessage());
+//            stepUpdateDto.setProgress(1);
+            stepUpdateDto.setStatus(StepStatus.FAILED);
+            sendUpdate(stepUpdateDto);
+
             log.error(e.getMessage());
         }
         return stepResponseDto;
@@ -111,7 +142,10 @@ public class GovuaDownloader implements Downloadable {
     }
 
 
-    public void downloadFile(String url, String filename) {
+    public void downloadFile(String url, String filename, Long stepId) {
+        StepUpdateDto stepUpdateDto = new StepUpdateDto();
+        stepUpdateDto.setStatus(StepStatus.IN_PROCESS);
+        stepUpdateDto.setStepId(stepId);
         Proxy proxy = null;
         long fileSize = 0;
         try {
@@ -172,6 +206,11 @@ public class GovuaDownloader implements Downloadable {
                             outputStream.write(buffer, 0, bytesRead);
                             totalBytesRead += bytesRead;
                             startByte += bytesRead;
+
+                            stepUpdateDto.setProgress((double) totalBytesRead / fileSize);
+                            sendUpdate(stepUpdateDto);
+
+
                             printDownloadProgress(totalBytesRead, fileSize);
                         }
 
@@ -209,6 +248,11 @@ public class GovuaDownloader implements Downloadable {
             int progressPercentage = (int) ((totalBytesRead * 100) / fileSize);
             log.debug("Download progress: " + progressPercentage + "%" + "   " + totalBytesRead / 1024 + " kb / " + fileSize / 1024 + " kb");
         }
+    }
+
+
+    private void sendUpdate(StepUpdateDto stepUpdateDto){
+        rabbitTemplate.convertAndSend(properties.getCpmsQueue(), stepUpdateDto);
     }
 
     @Data

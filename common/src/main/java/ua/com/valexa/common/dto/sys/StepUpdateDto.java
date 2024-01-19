@@ -7,8 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Data
-public class StepResponseDto {
+public class StepUpdateDto {
     private Long stepId;
     private StepStatus status;
-    private Map<String, String> results = new HashMap<>();
+    private String comment;
+    private double progress;
 }

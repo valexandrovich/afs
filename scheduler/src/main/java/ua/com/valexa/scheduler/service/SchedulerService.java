@@ -91,10 +91,16 @@ public class SchedulerService {
     public void handleNextStep(StepResponseDto stepResponseDto) {
 
         try {
+            System.out.println(LocalDateTime.now().toString() + " : " );
             Step step = stepRepository.findById(stepResponseDto.getStepId()).orElseThrow(() -> new RuntimeException("Can't find Step with id : " + stepResponseDto.getStepId()));
             Job job = step.getJob();
             job.getResults().putAll(stepResponseDto.getResults());
             jobRepository.save(job);
+
+//            step.setStatus(stepResponseDto.getStatus());
+//            step.setComment(stepResponseDto.getComment());
+//            step.setFinishedAt(LocalDateTime.now());
+//            stepRepository.save(step);
 
 
 

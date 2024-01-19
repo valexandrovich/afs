@@ -17,5 +17,8 @@ public class Properties {
     @Value("${proxyPort}")
     private Integer proxyPort;
 
+    @Value("${cpms-queue}")
+    private String cpmsQueue;
+
 
 }

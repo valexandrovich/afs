@@ -25,6 +25,7 @@
     <modules>
         <module>db</module>
         <module>common</module>
+        <module>cpms</module>
         <module>scheduler</module>
         <module>downloader</module>
     </modules>

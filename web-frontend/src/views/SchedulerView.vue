@@ -20,7 +20,14 @@ onMounted(() => {
 })
 
 const initStoredJob = (storedJobId) => {
-  console.log(storedJobId)
+
+  console.log(typeof storedJobId)
+
+  const storedJobRequest = {
+    storedJobId: storedJobId,
+    initiatorName: 'valex'
+  }
+  axios.post('/api/scheduler/init', storedJobRequest);
 }
 
 </script>

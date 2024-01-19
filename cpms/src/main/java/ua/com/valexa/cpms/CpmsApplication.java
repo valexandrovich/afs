@@ -1,4 +1,4 @@
-package ua.com.valexa.webbackend;
+package ua.com.valexa.cpms;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,11 +9,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = {"ua.com.valexa.db.repository"})
 @EntityScan(basePackages = {"ua.com.valexa.db.model"})
-@ComponentScan(basePackages = {"ua.com.valexa.webbackend", "ua.com.valexa.db"})
-public class WebBackendApplication {
+@ComponentScan(basePackages = {"ua.com.valexa.cpms", "ua.com.valexa.db"})
+public class CpmsApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(WebBackendApplication.class, args);
+        SpringApplication.run(CpmsApplication.class, args);
     }
 
 }
