@@ -4,7 +4,12 @@ export default {
   content: [],
   theme: {
     extend: {
+      fontFamily: {
+        'montserrat': ['Montserrat', 'sans-serif']
+      },
       width: {
+        '2p': '2%',
+        '3p': '3%',
         '5p': '5%',
         '10p': '10%',
         '15p': '15%',

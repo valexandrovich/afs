@@ -1,8 +1,42 @@
-@import './base.css';
+/*@import './base.css';*/
+/*@import './afs.css';*/
 /* ./src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 400;
+    src: url('@/assets/Montserrat-VariableFont_wght.ttf') format('ttf')
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+}
+
+
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 5px; /* Width of the scrollbar */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    /*background: #e50f0f; !* Track color *!*/
+
+    @apply bg-blue-500;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    /*background: #0216ff; !* Handle color *!*/
+    @apply bg-blue-200;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    /*background: #39ff00; !* Handle color on hover *!*/
+    @apply bg-blue-50;
+}
 
 
 button {
