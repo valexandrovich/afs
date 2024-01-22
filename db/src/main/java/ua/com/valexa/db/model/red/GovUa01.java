@@ -8,17 +8,17 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
 @Entity
 @Table(name = "govua01", schema = "red")
-public class GovUa01Row {
+@Data
+public class GovUa01 {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private UUID id;
     @Column(unique = true)
     private UUID hash;
-
+    private LocalDateTime createdAt;
+    private Long revisionId;
     private Long number;
     private LocalDate date;
     private String type;
@@ -30,8 +30,7 @@ public class GovUa01Row {
     private String courtName;
     private LocalDate endRegistrationDate;
 
-    private LocalDateTime createdAt;
-    private Long revisionId;
+
 
     public void generateHash() {
         this.hash = UUID.nameUUIDFromBytes((number.toString()

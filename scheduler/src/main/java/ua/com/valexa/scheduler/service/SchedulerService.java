@@ -104,10 +104,13 @@ public class SchedulerService {
     }
 
     public void handleNextStep(StepResponseDto stepResponseDto) {
+        log.debug("handleNextStep");
 
         try {
             System.out.println(LocalDateTime.now().toString() + " : " );
             Step step = stepRepository.findById(stepResponseDto.getStepId()).orElseThrow(() -> new RuntimeException("Can't find Step with id : " + stepResponseDto.getStepId()));
+            step.setFinishedAt(LocalDateTime.now());
+            step = stepRepository.save(step);
             Job job = step.getJob();
             job.getResults().putAll(stepResponseDto.getResults());
             jobRepository.save(job);
@@ -122,7 +125,7 @@ public class SchedulerService {
                 nextStep.setStatus(StepStatus.NEW);
                 nextStep.setStartedAt(LocalDateTime.now());
                 nextStep.setStoredStep(nextStoredStep);
-                nextStep = stepRepository.save(step);
+                nextStep = stepRepository.save(nextStep);
 
                 StepRequestDto stepRequestDto = new StepRequestDto();
                 stepRequestDto.setWorkerName(nextStoredStep.getWorkerName());
@@ -146,6 +149,10 @@ public class SchedulerService {
                     }
                 }
 
+            } else {
+                log.debug("Can't find next step in Stored Job: " + job.getStoredJob().getId());
+                job.setFinishedAt(LocalDateTime.now());
+                job = jobRepository.save(job);
             }
 
             log.debug("Looking for next step");

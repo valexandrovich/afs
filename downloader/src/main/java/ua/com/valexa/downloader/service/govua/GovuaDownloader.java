@@ -195,7 +195,9 @@ public class GovuaDownloader implements Downloadable {
                             connection = (HttpURLConnection) new URL(url).openConnection();
                         }
 
-                        connection = (HttpURLConnection) new URL(url).openConnection();
+                        connection.setReadTimeout(2000);
+
+//                        connection = (HttpURLConnection) new URL(url).openConnection();
                         if (startByte > 0) {
                             connection.setRequestProperty("Range", "bytes=" + startByte + "-");
                         }

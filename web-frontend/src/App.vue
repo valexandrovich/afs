@@ -11,7 +11,7 @@ import SideMenuComponent from "@/components/SideMenuComponent.vue";
 
     <SideMenuComponent/>
 
-    <main class="flex-1 overflow-auto  p-8 bg-white  custom-scrollbar">
+    <main class="flex-1 overflow-auto  p-8 bg-gradient-to-r from-white to-gray-100   custom-scrollbar">
       <RouterView/>
     </main>
 

@@ -28,18 +28,9 @@ public class ImporterService {
     }
 
     public CompletableFuture<StepResponseDto> handleImport(StepRequestDto stepRequestDto) {
+
         return CompletableFuture.supplyAsync(() -> {
-            try {
                 return importable.handleImport(stepRequestDto.getId(), stepRequestDto.getParameters());
-            } catch (JobInstanceAlreadyCompleteException e) {
-                throw new RuntimeException(e);
-            } catch (JobExecutionAlreadyRunningException e) {
-                throw new RuntimeException(e);
-            } catch (JobParametersInvalidException e) {
-                throw new RuntimeException(e);
-            } catch (JobRestartException e) {
-                throw new RuntimeException(e);
-            }
         }, executorService);
     }
 }

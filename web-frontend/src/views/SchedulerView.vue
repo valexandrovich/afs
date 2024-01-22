@@ -40,14 +40,14 @@ const initStoredJob = (storedJobId) => {
     <span class="text-5xl font-black uppercase  text-gray-300  mb-4">  <font-awesome-icon :icon="['fas', 'calendar']" class="mr-2 fa-fw"/> Розклад задач</span>
 
     <div class="flex flex-col  ">
-      <div class="flex flex-row   gap-2 bg-blue-500 text-blue-50 text-lg font-bold   rounded-t-2xl py-2  ">
+      <div class="flex flex-row   gap-2 bg-green-700 text-blue-50 text-lg font-bold   rounded-t-2xl py-2  ">
 
         <div class="flex flex-col w-10p text-center">ID</div>
         <div class="flex flex-col w-25p">Назва</div>
         <div class="flex flex-col w-55p">Опис</div>
         <div class="flex flex-col w-10p text-center">Дія</div>
       </div>
-      <div class="flex flex-row  py-2  gap-2 text-sm  text-gray-600 font-bold" v-for="(job, index) in state.storedJobs" :key="job.id"  :class="index % 2 == 0 ? 'bg-blue-50': 'bg-blue-100' ">
+      <div class="flex flex-row  py-2  gap-2 text-sm  text-gray-600 font-bold last:rounded-b-2xl" v-for="(job, index) in state.storedJobs" :key="job.id"  :class="index % 2 == 0 ? 'bg-gray-50': 'bg-gray-100' ">
 
         <div class="flex flex-col w-10p text-center">{{job.id}}</div>
         <div class="flex flex-col w-25p">{{job.name}}</div>

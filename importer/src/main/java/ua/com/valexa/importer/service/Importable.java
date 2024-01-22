@@ -7,7 +7,8 @@ import org.springframework.batch.core.repository.JobRestartException;
 import ua.com.valexa.common.dto.sys.StepResponseDto;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public interface Importable {
-    StepResponseDto handleImport(Long stepId, Map<String, String> parameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException;
+    StepResponseDto handleImport(Long stepId, Map<String, String> parameters) ;
 }

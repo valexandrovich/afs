@@ -6,13 +6,14 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.stereotype.Component;
 import ua.com.valexa.common.dto.red.GovUa01Dto;
-import ua.com.valexa.db.model.red.GovUa01Row;
+import ua.com.valexa.db.model.red.GovUa01;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 @Component
@@ -27,13 +28,14 @@ public interface GovUa01Mapper {
     @Mapping(source="end_date_auc", target="endDateAuc")
     @Mapping(source="court_name", target="courtName")
     @Mapping(source="end_registration_date", target="endRegistrationDate")
-    GovUa01Row mapToEntity(GovUa01Dto dto);
+    GovUa01 mapToEntity(GovUa01Dto dto);
 
 
     @AfterMapping
-    default void afterNapping(GovUa01Dto dto, @MappingTarget GovUa01Row entity){
+    default void afterNapping(GovUa01Dto dto, @MappingTarget GovUa01 entity){
         entity.generateHash();
         entity.setCreatedAt(LocalDateTime.now());
+        entity.setId(UUID.randomUUID());
 //        entity.setRevisionId(UUID.randomUUID());
     }
     //

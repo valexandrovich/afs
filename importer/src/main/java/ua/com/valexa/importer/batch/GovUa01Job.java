@@ -1,7 +1,7 @@
 package ua.com.valexa.importer.batch;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -9,30 +9,32 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.skip.SkipPolicy;
-import org.springframework.batch.core.step.tasklet.TaskletStep;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileUrlResource;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.transaction.PlatformTransactionManager;
 import ua.com.valexa.common.dto.red.GovUa01Dto;
-import ua.com.valexa.db.model.red.GovUa01Row;
+import ua.com.valexa.common.dto.sys.StepUpdateDto;
+import ua.com.valexa.db.model.enums.StepStatus;
+import ua.com.valexa.db.model.red.GovUa01;
+import ua.com.valexa.importer.configuration.Properties;
 import ua.com.valexa.importer.mapper.GovUa01Mapper;
 
 import javax.sql.DataSource;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.util.UUID;
 
 @Configuration
 @EnableBatchProcessing
@@ -46,6 +48,11 @@ public class GovUa01Job {
 
     @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    RabbitTemplate rabbitTemplate;
+
+    private Properties properties;
 
 //    @Bean
 //    public FlatFileItemReader<GovUa01Dto> reader() {
@@ -75,20 +82,31 @@ public class GovUa01Job {
     @Autowired
     private ItemReader<GovUa01Dto> govUa01reader;
 
-//    @Autowired
-//    private ItemProcessor<GovUa01Dto, GovUa01Row> Govua01Processor;
+
+    @Value("${cpms-queue}")
+    private String cpmsQueue;
+
+
+    @Autowired
+    private ItemProcessor<GovUa01Dto, GovUa01> govUa01Processor;
 
 //    @Autowired
 //    private ItemWriter<GovUa01Row> Govua01writer;
 
 //    @Autowired
-//    private StepExecutionListener Govua01stepExecutionListener;
+//    private StepExecutionListener govUa01stepExecutionListener;
 
 //    @Autowired
-//    private ChunkListener Govua01writerListener;
+//    private ChunkListener govUa01writerListener;
 
 //    @Autowired
 //    private SkipPolicy Govua01skipPolicy;
+
+    @Autowired
+    ItemWriteListener<GovUa01> govUa01writerListener;
+
+//    @Autowired
+//    StepExecutionListener govUa01stepExecutionListener;
 
 
 //    @Autowired
@@ -118,105 +136,129 @@ public class GovUa01Job {
 
     @Bean
     @StepScope
-    @SneakyThrows
+//    @SneakyThrows
     public FlatFileItemReader<GovUa01Dto> govUa01reader(@Value("#{jobParameters['file']}") String file) {
 
-        System.out.println(file);
+//        System.out.println(file);
+        try {
+            return new FlatFileItemReaderBuilder<GovUa01Dto>()
+                    .resource(new FileUrlResource(file))
+                    .name("myreader")
+                    .delimited()
+                    .delimiter("\t")
+                    .names("number", "date", "type", "firm_edrpou", "firm_name", "case_number", "start_date_auc", "end_date_auc", "court_name", "end_registration_date")
+                    .targetType(GovUa01Dto.class)
+                    .linesToSkip(skipLines)
+                    .build();
+        } catch (MalformedURLException e) {
+            log.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
 
-        return new FlatFileItemReaderBuilder<GovUa01Dto>()
-                .resource(new FileUrlResource(file))
-                .name("myreader")
-                .delimited()
-                .delimiter("\t")
-                .names("number", "date", "type", "firm_edrpou", "firm_name", "case_number", "start_date_auc", "end_date_auc", "court_name", "end_registration_date")
-                .targetType(GovUa01Dto.class)
-                .linesToSkip(skipLines)
-                .build();
     }
 
-//    @Bean
-//    @StepScope
-//    public ItemProcessor<GovUa01Dto, GovUa01Row> Govua01processor() {
-//        return new ItemProcessor<GovUa01Dto, GovUa01Row>() {
-//
-//            @Autowired
-//            GovUa01Mapper mapper;
-//
-//            @Override
-//            public GovUa01Row process(GovUa01Dto item) throws Exception {
-//                GovUa01Row result = mapper.mapToEntity(item);
-//                result.setRevisionId(777L);
-//                return result;
-//            }
-//        };
-//    }
-
     @Bean
-    public ItemWriter<GovUa01Dto> writer() {
+    @StepScope
+    public ItemProcessor<GovUa01Dto, GovUa01> govUa01processor(@Value("#{jobParameters['stepId']}") String stepId) {
+        return new ItemProcessor<GovUa01Dto, GovUa01>() {
 
-        System.out.println("Writter");
+            @Autowired
+            GovUa01Mapper mapper;
 
-        return items -> {
-            for (GovUa01Dto item : items) {
-                System.out.println(item); // Print each item
+            @Override
+            public GovUa01 process(GovUa01Dto item) throws Exception {
+//                GovUa01Row gua01row = new GovUa01Row();
+//                gua01row.setCourtName("TEST");
+//                System.out.println(gua01row);
+//                return gua01row;
+//                System.out.println(item);
+                GovUa01 result = mapper.mapToEntity(item);
+//                System.out.println(result);
+                result.setRevisionId(Long.valueOf(stepId));
+                result.setId(UUID.randomUUID());
+                return result;
             }
         };
     }
 
-
 //    @Bean
-//    @StepScope
-//    public JdbcBatchItemWriter<GovUa01Row> Govua01writer() {
-//        return new JdbcBatchItemWriterBuilder<GovUa01Row>()
-//                .sql("insert into red.Govua01 (" +
-//                        "number, date, type, firm_edrpou, case_number, court_name, created_at, revision_id, end_date_auc, end_registration_date, firm_name, hash, start_date_auc) " +
-//                        "VALUES (:number, :date, :type, :firmEdrpou, :caseNumber, :courtName, :createdAt, :revisionId, :endDateAuc, :endRegistrationDate, :firmName, :hash, :startDateAuc) ")
-//                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-//                .dataSource(dataSource)
-//                .assertUpdates(false)
-//                .build();
-//    }
-
-//    @Bean
-//    @StepScope
-//    public ItemWriteListener<GovUa01Row> Govua01writerListener() {
-//        return new ItemWriteListener<GovUa01Row>() {
-//            @Override
-//            public void afterWrite(Chunk<? extends GovUa01Row> items) {
-//                handledRowsCount += items.size();
-//            }
-//
-//            //            @Transactional
-//            @Override
-//            public void beforeWrite(Chunk<? extends GovUa01Row> items) {
-//
-////                etlStep.setDescription("Записано: " + handledRowsCount + " Дублікати: " + duplicateRowsCount + " Помилки: " + errorsCount);
-////
-////                etlStep.setProgress(Double.valueOf((handledRowsCount+duplicateRowsCount)) / totalRowsCount * 100);
-////                etlStep = etlStepRepository.save(etlStep);
-////                etlStepRepository.flush();
-//
-////                etlStep.setComment("Опрацьовано: " + handledRowsCount + "  Дублікатів: " + duplicateRowsCount + " Помилок: " + errorsCount);
-////                etlStep = etlStepRepository.save(etlStep);
-//
-//                long divident = handledRowsCount + duplicateRowsCount + errorsCount;
-//                double p = (double) divident / totalRowsCount;
-//
-////                etlStep.setProgress(p);
-////                rabbitTemplate.convertAndSend(etlLoggerQueue, etlStep);
-////                rabbitTemplate.convertAndSend("afg-etl-logger", etlStep);
-//
-//                System.out.println("BEFORE WRITE - OK: " + handledRowsCount + "  DUP: " + duplicateRowsCount + " ERRORS:" + errorsCount);
-//            }
-//
-//            @Override
-//            public void onWriteError(Exception exception, Chunk<? extends GovUa01Row> items) {
-//                if (exception instanceof DuplicateKeyException) {
-//                    duplicateRowsCount++;
-//                }
+//    public ItemWriter<GovUa01Row> writer() {
+//        return items -> {
+//            for (GovUa01Row item : items) {
+//                System.out.println("WRITTER: " + item); // Print each item
 //            }
 //        };
 //    }
+
+
+    @Bean
+    @StepScope
+    public JdbcBatchItemWriter<GovUa01> govUa01writer() {
+        return new JdbcBatchItemWriterBuilder<GovUa01>()
+                .sql("insert into red.govua01 (" +
+                        "id, number, date, type, firm_edrpou, case_number, court_name, created_at, revision_id, end_date_auc, end_registration_date, firm_name, hash, start_date_auc) " +
+                        "VALUES (:id, :number, :date, :type, :firmEdrpou, :caseNumber, :courtName, :createdAt, :revisionId, :endDateAuc, :endRegistrationDate, :firmName, :hash, :startDateAuc) ")
+                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
+                .dataSource(dataSource)
+                .assertUpdates(false)
+                .build();
+    }
+
+    @Bean
+    @StepScope
+    public ItemWriteListener<GovUa01> govUa01writerListener(@Value("#{jobParameters['stepId']}") String stepId) {
+        return new ItemWriteListener<GovUa01>() {
+            @Override
+            public void afterWrite(Chunk<? extends GovUa01> items) {
+//                log.info("afterWrite");
+                handledRowsCount += items.size();
+            }
+
+            //            @Transactional
+            @Override
+            public void beforeWrite(Chunk<? extends GovUa01> items) {
+
+//                System.out.println(cpmsQueue);
+//                System.out.println(properties);
+//                    log.info("before write");
+//                etlStep.setDescription("Записано: " + handledRowsCount + " Дублікати: " + duplicateRowsCount + " Помилки: " + errorsCount);
+//
+//                etlStep.setProgress(Double.valueOf((handledRowsCount+duplicateRowsCount)) / totalRowsCount * 100);
+//                etlStep = etlStepRepository.save(etlStep);
+//                etlStepRepository.flush();
+
+                long divident = handledRowsCount + duplicateRowsCount + errorsCount;
+                double progress = (double) divident / totalRowsCount;
+
+                StepUpdateDto stepUpdateDto = new StepUpdateDto();
+                stepUpdateDto.setStepId(Long.valueOf(stepId));
+                stepUpdateDto.setProgress(progress);
+                stepUpdateDto.setComment("Опрацьовано: " + handledRowsCount + "  Дублікатів: " + duplicateRowsCount + " Помилок: " + errorsCount);
+                stepUpdateDto.setStatus(StepStatus.IN_PROCESS);
+                sendUpdate(stepUpdateDto);
+//                etlStep.setComment("Опрацьовано: " + handledRowsCount + "  Дублікатів: " + duplicateRowsCount + " Помилок: " + errorsCount);
+//                etlStep = etlStepRepository.save(etlStep);
+
+//                long divident = handledRowsCount + duplicateRowsCount + errorsCount;
+//                double p = (double) divident / totalRowsCount;
+
+//                etlStep.setProgress(p);
+//                rabbitTemplate.convertAndSend(etlLoggerQueue, etlStep);
+//                rabbitTemplate.convertAndSend("afg-etl-logger", etlStep);
+
+//                System.out.println("BEFORE WRITE - OK: " + handledRowsCount + "  DUP: " + duplicateRowsCount + " ERRORS:" + errorsCount);
+            }
+
+            @Override
+            public void onWriteError(Exception exception, Chunk<? extends GovUa01> items) {
+//                exception.printStackTrace();
+//                log.info("on write error");
+                if (exception instanceof DuplicateKeyException) {
+                    duplicateRowsCount++;
+                }
+            }
+        };
+    }
 
     @Bean
     @StepScope
@@ -251,35 +293,37 @@ public class GovUa01Job {
         };
     }
 
-//
-//    @Bean
-//    StepExecutionListener Govua01stepExecutionListener(){
-//        return new StepExecutionListener() {
-//            @Override
-////            @Transactional
-//            public void beforeStep(StepExecution stepExecution) {
-//
-////                long etlSubtaskId = stepExecution.getJobExecution().getJobParameters().getLong("etlSubtaskId");
+//@Value("#{jobParameters['file']}") String file, @Value("#{jobParameters['stepId']}") String stepId
+    @Bean
+    StepExecutionListener govUa01stepExecutionListener(){
+        return new StepExecutionListener() {
+            @Override
+//            @Transactional
+            public void beforeStep(StepExecution stepExecution) {
+//                    log.info("before step");
+//                    log.info(stepExecution.getJobParameters().getString("file"));
+//                    log.info(stepExecution.getJobParameters().getString("stepId"));
+//                long etlSubtaskId = stepExecution.getJobExecution().getJobParameters().getLong("etlSubtaskId");
 //                String inputFilePath = stepExecution.getJobExecution().getJobParameters().getString("filename");
-////                Long etlTaskId = stepExecution.getJobExecution().getJobParameters().getLong("etlTaskId");
-//
-////                etlTask = etlTaskRepository.findById(etlTaskId).orElseThrow(null);
-//
-//                duplicateRowsCount = 0;
-//                handledRowsCount = 0;
-//                errorsCount = 0;
-//                totalRowsCount = 0;
-//                inputFile = new File(inputFilePath);
-//                try (BufferedReader br = new BufferedReader(new FileReader(inputFile))){
-//                    while (br.readLine() != null){
-//                        totalRowsCount++;
-//                    }
-//                } catch (FileNotFoundException e) {
-//                    throw new RuntimeException(e);
-//                } catch (IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-//                totalRowsCount = totalRowsCount - skipLines;
+//                Long etlTaskId = stepExecution.getJobExecution().getJobParameters().getLong("etlTaskId");
+
+//                etlTask = etlTaskRepository.findById(etlTaskId).orElseThrow(null);
+
+                duplicateRowsCount = 0;
+                handledRowsCount = 0;
+                errorsCount = 0;
+                totalRowsCount = 0;
+                inputFile = new File(stepExecution.getJobParameters().getString("file"));
+                try (BufferedReader br = new BufferedReader(new FileReader(inputFile))){
+                    while (br.readLine() != null){
+                        totalRowsCount++;
+                    }
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                totalRowsCount = totalRowsCount - skipLines;
 //
 //                System.out.println("TOTAL ROWS : " + totalRowsCount);
 //
@@ -288,29 +332,37 @@ public class GovUa01Job {
 ////                etlStep.setDescription("Імпорт даних");
 ////                etlStep =  etlStepRepository.save(etlStep);
 ////                etlStepRepository.flush();
-//            }
 //
-//            @Override
-////            @Transactional
-//            public ExitStatus afterStep(StepExecution stepExecution) {
+                StepUpdateDto stepUpdateDto = new StepUpdateDto();
+                stepUpdateDto.setStepId(Long.valueOf(stepExecution.getJobParameters().getString("stepId")));
+                stepUpdateDto.setStatus(StepStatus.IN_PROCESS);
+                stepUpdateDto.setComment("Іморт даних");
+                sendUpdate(stepUpdateDto);
+
+            }
+
+            @Override
+//            @Transactional
+            public ExitStatus afterStep(StepExecution stepExecution) {
+                log.info("After step");
 //                System.out.println("AFTER JOB  --  OK: " + handledRowsCount + "  DUP: " + duplicateRowsCount + " ERRORS:" + errorsCount);
-////                etlStep.setComment("Опрацьовано: " + handledRowsCount + "  Дублікатів: " + duplicateRowsCount + " Помилок: " + errorsCount);
-////                etlStep.setStatus(EtlStatus.COMPLETED);
-////                etlStep.setProgress(1.0);
-////                etlStep.setFinishedAt(LocalDateTime.now());
-////                rabbitTemplate.convertAndSend(etlLoggerQueue, etlStep);
-////                rabbitTemplate.convertAndSend("afg-etl-logger", etlStep);
-//
-////                etlStep.setDescription("Записано: " + handledRowsCount + " Дублікати: " + duplicateRowsCount + " Помилки: " + errorsCount);
-////                etlStep.setProgress(Double.valueOf((handledRowsCount+duplicateRowsCount)) / totalRowsCount * 100);
-////                etlStep.setFinishedAt(LocalDateTime.now());
-////                etlStep.setStatus(EtlTaskStatus.FINISHED);
-////                etlStep = etlStepRepository.save(etlStep);
-////                etlStepRepository.flush();
-//                return ExitStatus.COMPLETED;
-//            }
-//        };
-//    }
+//                etlStep.setComment("Опрацьовано: " + handledRowsCount + "  Дублікатів: " + duplicateRowsCount + " Помилок: " + errorsCount);
+//                etlStep.setStatus(EtlStatus.COMPLETED);
+//                etlStep.setProgress(1.0);
+//                etlStep.setFinishedAt(LocalDateTime.now());
+//                rabbitTemplate.convertAndSend(etlLoggerQueue, etlStep);
+//                rabbitTemplate.convertAndSend("afg-etl-logger", etlStep);
+
+//                etlStep.setDescription("Записано: " + handledRowsCount + " Дублікати: " + duplicateRowsCount + " Помилки: " + errorsCount);
+//                etlStep.setProgress(Double.valueOf((handledRowsCount+duplicateRowsCount)) / totalRowsCount * 100);
+//                etlStep.setFinishedAt(LocalDateTime.now());
+//                etlStep.setStatus(EtlTaskStatus.FINISHED);
+//                etlStep = etlStepRepository.save(etlStep);
+//                etlStepRepository.flush();
+                return ExitStatus.COMPLETED;
+            }
+        };
+    }
 
 //    @Bean
 //    public Step Govua01counterStep(){
@@ -332,15 +384,14 @@ public class GovUa01Job {
     @Bean
     public Step govUa01step() {
         return new StepBuilder("Govua01step", jobRepository)
-                .<GovUa01Dto, GovUa01Dto>chunk(10000, transactionManager)
+                .<GovUa01Dto, GovUa01>chunk(10000, transactionManager)
                 .reader(govUa01reader)
+                .processor(govUa01Processor)
 //                .skipPolicy(govuUa01skipPolicy())
-                .writer(writer())
-
-//                .processor(Govua01Processor)
+                .writer(govUa01writer())
 //                .writer(Govua01writer)
-//                .listener(Govua01writerListener)
-//                .listener(Govua01stepExecutionListener())
+                .listener(govUa01writerListener)
+                .listener(govUa01stepExecutionListener())
                 .faultTolerant()
                 .skipPolicy(govuUa01skipPolicy())
 
@@ -368,11 +419,10 @@ public class GovUa01Job {
 //    }
 
 
-
     @Bean("govua01job")
     public Job govUa01job(JobRepository jobRepository) {
         return new JobBuilder("Govua01job", jobRepository)
-//                .listener(govua01jobExecutionListener())
+//                .listener(govUa01stepExecutionListener)
 //                .start(Govua01counterStep())
                 .start(govUa01step())
 //                .next(Govua01stepSendToReport())
@@ -401,7 +451,6 @@ public class GovUa01Job {
 //    }
 
 
-
 //    public void sendToReporter(ReportMessage reportMessage) {
 //        log.info("Sending message to REPORTER " + reportMessage.toString());
 ////        String message = "{\"group\":\"" + importerMessage.getGroup() + "\",\"source\":\"" + importerMessage.getSource() + "\",\"file\":\"" + importerMessage.getFile() + "\"}";
@@ -416,8 +465,9 @@ public class GovUa01Job {
 //        return  reportMessage;
 //    }
 
-
-
+    private void sendUpdate(StepUpdateDto stepUpdateDto) {
+        rabbitTemplate.convertAndSend(cpmsQueue, stepUpdateDto);
+    }
 
 
 }
