@@ -69,6 +69,14 @@ public class SchedulerService {
                     rabbitTemplate.convertAndSend("downloader", stepRequestDto);
                     break;
                 }
+                case "importer": {
+                    log.debug("Sending to : " + "importer : "  + stepRequestDto);
+                    rabbitTemplate.convertAndSend("importer", stepRequestDto);
+                    break;
+                }
+                default: {
+                    log.info("Can't find desired service for handling step: " + step);
+                }
             }
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -88,6 +96,13 @@ public class SchedulerService {
 
     }
 
+    private StoredStep findNextStep(Integer previousStep, StoredJob storedJob){
+        return storedJob.getSteps().stream()
+                .filter(storedStep -> storedStep.getStepOrder() > previousStep && storedStep.getIsEnabled())
+                .min(Comparator.comparingInt(StoredStep::getStepOrder))
+                .orElse(null);
+    }
+
     public void handleNextStep(StepResponseDto stepResponseDto) {
 
         try {
@@ -96,6 +111,44 @@ public class SchedulerService {
             Job job = step.getJob();
             job.getResults().putAll(stepResponseDto.getResults());
             jobRepository.save(job);
+
+
+            StoredStep nextStoredStep = findNextStep(step.getStoredStep().getStepOrder(), job.getStoredJob());
+
+            if (nextStoredStep != null){
+
+                Step nextStep = new Step();
+                nextStep.setJob(job);
+                nextStep.setStatus(StepStatus.NEW);
+                nextStep.setStartedAt(LocalDateTime.now());
+                nextStep.setStoredStep(nextStoredStep);
+                nextStep = stepRepository.save(step);
+
+                StepRequestDto stepRequestDto = new StepRequestDto();
+                stepRequestDto.setWorkerName(nextStoredStep.getWorkerName());
+                stepRequestDto.setParameters(nextStoredStep.getParameters());
+                stepRequestDto.getParameters().putAll(stepResponseDto.getResults());
+                stepRequestDto.setId(nextStep.getId());
+
+                switch (nextStoredStep.getServiceName()) {
+                    case "downloader": {
+                        log.debug("Sending to : " + "downloader : "  + stepRequestDto);
+                        rabbitTemplate.convertAndSend("downloader", stepRequestDto);
+                        break;
+                    }
+                    case "importer": {
+                        log.debug("Sending to : " + "importer : "  + stepRequestDto);
+                        rabbitTemplate.convertAndSend("importer", stepRequestDto);
+                        break;
+                    }
+                    default: {
+                        log.info("Can't find desired service for handling step: " + step);
+                    }
+                }
+
+            }
+
+            log.debug("Looking for next step");
 
 //            step.setStatus(stepResponseDto.getStatus());
 //            step.setComment(stepResponseDto.getComment());

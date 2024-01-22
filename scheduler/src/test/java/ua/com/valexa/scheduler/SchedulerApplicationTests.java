@@ -67,6 +67,21 @@ class SchedulerApplicationTests {
         ss.setStepOrder(1);
         ss = storedStepRepository.save(ss);
 
+
+        StoredStep ss2 = new StoredStep();
+        ss2.setStoredJob(sj);
+
+//        Map<String, String> parameters2 = new HashMap<>();
+//        parameters2.put("packageId", "vidomosti-pro-spravi-pro-bankrutstvo-1");
+//        parameters2.put("sourceName", "govua01");
+//        parameters2.put("retries", "3");
+
+//        ss2.setParameters(parameters2);
+        ss2.setServiceName("importer");
+        ss2.setWorkerName("govua01");
+        ss2.setStepOrder(2);
+        ss2 = storedStepRepository.save(ss2);
+
     }
 
 
