@@ -14,7 +14,7 @@ import java.util.UUID;
         "spring.datasource.url=jdbc:postgresql://localhost:5432/otp",
         "spring.datasource.username=otp",
         "spring.datasource.password=otp",
-        "spring.jpa.hibernate.ddl-auto=update",
+//        "spring.jpa.hibernate.ddl-auto=update",
         "logging.level.ua.com.valexa=debug",
 })
 class DownloaderApplicationTests {

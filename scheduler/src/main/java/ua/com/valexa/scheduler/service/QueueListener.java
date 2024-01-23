@@ -23,7 +23,7 @@ public class QueueListener {
 
     @RabbitListener(queues = "${scheduler-init-queue}", errorHandler = "queueListenerErrorHandler")
     public void receiveInitMessage(StoredJobRequestDto storedJobRequestDto) {
-        log.debug("Scheduler get message: " + storedJobRequestDto.toString().replaceAll("\n", " ").replaceAll("\r", " "));
+        log.info("Scheduler got StoredJobRequestDto: " + storedJobRequestDto.toString().replaceAll("\n", " ").replaceAll("\r", " "));
         try {
             service.initStoredJob(storedJobRequestDto);
         } catch (Exception e){
@@ -34,7 +34,7 @@ public class QueueListener {
 
     @RabbitListener(queues = "${scheduler-response-queue}", errorHandler = "queueListenerErrorHandler")
     public void receiveResponseMessage(StepResponseDto stepResponseDto) {
-        log.debug("Scheduler got StepResponseDto: " + stepResponseDto);
+        log.info("Scheduler got StepResponseDto: " + stepResponseDto.toString().replaceAll("\n", " ").replaceAll("\r", " "));
         service.handleNextStep(stepResponseDto);
     }
 }

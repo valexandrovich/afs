@@ -39,7 +39,10 @@ public class SchedulerService {
 
 
     public void initStoredJob(StoredJobRequestDto dto) {
+
         log.debug("Initing Stored job: " + dto.getStoredJobId());
+
+
         try {
             StoredJob sj = storedJobRepository.findById(dto.getStoredJobId()).orElseThrow(() -> new RuntimeException("Cant find StoredJob with id: " + dto.getStoredJobId()));
 
@@ -116,10 +119,22 @@ public class SchedulerService {
             jobRepository.save(job);
 
 
+            if (step.getStatus().equals(StepStatus.FAILED)){
+                if (step.getStoredStep().getIsSkipable()){
+                    step.setStatus(StepStatus.SKIPED);
+                    step = stepRepository.save(step);
+                } else {
+                    log.debug("Job failed on non-skippable step" + job.getStoredJob().getId());
+                    job.setFinishedAt(LocalDateTime.now());
+                    job = jobRepository.save(job);
+                    return;
+                }
+            }
+
+
             StoredStep nextStoredStep = findNextStep(step.getStoredStep().getStepOrder(), job.getStoredJob());
 
             if (nextStoredStep != null){
-
                 Step nextStep = new Step();
                 nextStep.setJob(job);
                 nextStep.setStatus(StepStatus.NEW);

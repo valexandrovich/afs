@@ -151,7 +151,6 @@ public class GovUa01Job {
                     .linesToSkip(skipLines)
                     .build();
         } catch (MalformedURLException e) {
-            log.error(e.getMessage());
             throw new RuntimeException(e);
         }
 
@@ -267,9 +266,9 @@ public class GovUa01Job {
 
             if (t instanceof DuplicateKeyException) {
 //                    duplicateRows++;
-//                    duplicateRowsCount++;
+                    duplicateRowsCount++;
             } else {
-//                    parseErrorRows++;
+                    errorsCount++;
             }
 //                EtlSubtask etlSubtask = etlSubtaskRepository.findById(etlSubtaskId).orElseThrow(() -> new EtlTaskNotFoundException(""));
 //                etlSubtask.setDescription("SSS");
@@ -336,7 +335,7 @@ public class GovUa01Job {
                 StepUpdateDto stepUpdateDto = new StepUpdateDto();
                 stepUpdateDto.setStepId(Long.valueOf(stepExecution.getJobParameters().getString("stepId")));
                 stepUpdateDto.setStatus(StepStatus.IN_PROCESS);
-                stepUpdateDto.setComment("Іморт даних");
+                stepUpdateDto.setComment("Імпорт даних");
                 sendUpdate(stepUpdateDto);
 
             }
@@ -384,7 +383,7 @@ public class GovUa01Job {
     @Bean
     public Step govUa01step() {
         return new StepBuilder("Govua01step", jobRepository)
-                .<GovUa01Dto, GovUa01>chunk(10000, transactionManager)
+                .<GovUa01Dto, GovUa01>chunk(1000, transactionManager)
                 .reader(govUa01reader)
                 .processor(govUa01Processor)
 //                .skipPolicy(govuUa01skipPolicy())
