@@ -3,8 +3,6 @@ package ua.com.valexa.scheduler.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ua.com.valexa.common.dto.sys.StepResponseDto;
 import ua.com.valexa.common.dto.sys.StoredJobRequestDto;
@@ -12,7 +10,6 @@ import ua.com.valexa.common.dto.sys.StoredJobRequestDto;
 @Service
 @Slf4j
 public class QueueListener {
-
     final ObjectMapper objectMapper;
     final SchedulerService service;
 
@@ -35,6 +32,6 @@ public class QueueListener {
     @RabbitListener(queues = "${scheduler-response-queue}", errorHandler = "queueListenerErrorHandler")
     public void receiveResponseMessage(StepResponseDto stepResponseDto) {
         log.info("Scheduler got StepResponseDto: " + stepResponseDto.toString().replaceAll("\n", " ").replaceAll("\r", " "));
-        service.handleNextStep(stepResponseDto);
+        service.handleStepResponse(stepResponseDto);
     }
 }

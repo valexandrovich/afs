@@ -18,8 +18,6 @@ public class RabbitMqConfig {
     @Value("${scheduler-response-queue}")
     private String schedulerResponseQueue;
 
-
-
     @Bean
     public Queue initQueue() {
         return new Queue(schedulerInitQueue, true);
@@ -29,7 +27,6 @@ public class RabbitMqConfig {
     public Queue responseQueue() {
         return new Queue(schedulerResponseQueue, true);
     }
-
 
     @Bean
     public MessageConverter jsonMessageConverter() {

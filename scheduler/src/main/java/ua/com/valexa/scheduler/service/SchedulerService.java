@@ -36,10 +36,7 @@ public class SchedulerService {
     @Autowired
     StepRepository stepRepository;
 
-
-
     public void initStoredJob(StoredJobRequestDto dto) {
-
         log.debug("Initing Stored job: " + dto.getStoredJobId());
 
 
@@ -53,6 +50,7 @@ public class SchedulerService {
             job = jobRepository.save(job);
 
             StoredStep ss = getFirstStep(sj);
+
             Step step = new Step();
             step.setJob(job);
             step.setStatus(StepStatus.NEW);
@@ -65,15 +63,15 @@ public class SchedulerService {
             stepRequestDto.setParameters(ss.getParameters());
             stepRequestDto.setId(step.getId());
 
-
+            // TODO Remove service queues hardcoding
             switch (ss.getServiceName()) {
                 case "downloader": {
-                    log.debug("Sending to : " + "downloader : "  + stepRequestDto);
+                    log.debug("Sending to : " + "downloader : " + stepRequestDto);
                     rabbitTemplate.convertAndSend("downloader", stepRequestDto);
                     break;
                 }
                 case "importer": {
-                    log.debug("Sending to : " + "importer : "  + stepRequestDto);
+                    log.debug("Sending to : " + "importer : " + stepRequestDto);
                     rabbitTemplate.convertAndSend("importer", stepRequestDto);
                     break;
                 }
@@ -84,33 +82,30 @@ public class SchedulerService {
         } catch (Exception e) {
             log.error(e.getMessage());
         }
-
     }
 
-    public StoredStep getFirstStep(StoredJob sj) {
+    private StoredStep getFirstStep(StoredJob sj) throws RuntimeException {
         Optional<StoredStep> firstStep = sj.getSteps().stream()
-                .filter(StoredStep::getIsEnabled) // filter only enabled steps
-                .min(Comparator.comparingInt(StoredStep::getStepOrder)); // find the one with the smallest step order
+                .filter(StoredStep::getIsEnabled)
+                .min(Comparator.comparingInt(StoredStep::getStepOrder));
         if (firstStep.isPresent()) {
             return firstStep.get();
         } else {
             throw new RuntimeException("Cant find first enabled step in StoredJob: " + sj);
         }
-
     }
 
-    private StoredStep findNextStep(Integer previousStep, StoredJob storedJob){
+    private StoredStep findNextStep(Integer previousStep, StoredJob storedJob) {
         return storedJob.getSteps().stream()
                 .filter(storedStep -> storedStep.getStepOrder() > previousStep && storedStep.getIsEnabled())
                 .min(Comparator.comparingInt(StoredStep::getStepOrder))
                 .orElse(null);
     }
 
-    public void handleNextStep(StepResponseDto stepResponseDto) {
-        log.debug("handleNextStep");
+    public void handleStepResponse(StepResponseDto stepResponseDto) {
+        log.debug("Handling StepResponseDto: " + stepResponseDto.toString().replaceAll("\n", " ").replaceAll("\r", " "));
 
         try {
-            System.out.println(LocalDateTime.now().toString() + " : " );
             Step step = stepRepository.findById(stepResponseDto.getStepId()).orElseThrow(() -> new RuntimeException("Can't find Step with id : " + stepResponseDto.getStepId()));
             step.setFinishedAt(LocalDateTime.now());
             step = stepRepository.save(step);
@@ -118,9 +113,8 @@ public class SchedulerService {
             job.getResults().putAll(stepResponseDto.getResults());
             jobRepository.save(job);
 
-
-            if (step.getStatus().equals(StepStatus.FAILED)){
-                if (step.getStoredStep().getIsSkipable()){
+            if (step.getStatus().equals(StepStatus.FAILED)) {
+                if (step.getStoredStep().getIsSkipable()) {
                     step.setStatus(StepStatus.SKIPED);
                     step = stepRepository.save(step);
                 } else {
@@ -134,7 +128,7 @@ public class SchedulerService {
 
             StoredStep nextStoredStep = findNextStep(step.getStoredStep().getStepOrder(), job.getStoredJob());
 
-            if (nextStoredStep != null){
+            if (nextStoredStep != null) {
                 Step nextStep = new Step();
                 nextStep.setJob(job);
                 nextStep.setStatus(StepStatus.NEW);
@@ -148,19 +142,20 @@ public class SchedulerService {
                 stepRequestDto.getParameters().putAll(stepResponseDto.getResults());
                 stepRequestDto.setId(nextStep.getId());
 
+                // TODO replace queues to service hardcoding
                 switch (nextStoredStep.getServiceName()) {
                     case "downloader": {
-                        log.debug("Sending to : " + "downloader : "  + stepRequestDto);
+                        log.debug("Sending to : " + "downloader : " + stepRequestDto);
                         rabbitTemplate.convertAndSend("downloader", stepRequestDto);
                         break;
                     }
                     case "importer": {
-                        log.debug("Sending to : " + "importer : "  + stepRequestDto);
+                        log.debug("Sending to : " + "importer : " + stepRequestDto);
                         rabbitTemplate.convertAndSend("importer", stepRequestDto);
                         break;
                     }
                     default: {
-                        log.info("Can't find desired service for handling step: " + step);
+                        log.error("Can't find desired service for handling step: " + step);
                     }
                 }
 
@@ -169,24 +164,9 @@ public class SchedulerService {
                 job.setFinishedAt(LocalDateTime.now());
                 job = jobRepository.save(job);
             }
-
-            log.debug("Looking for next step");
-
-//            step.setStatus(stepResponseDto.getStatus());
-//            step.setComment(stepResponseDto.getComment());
-//            step.setFinishedAt(LocalDateTime.now());
-//            stepRepository.save(step);
-
-
-
-
-
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error(e.getMessage());
         }
-
-
-
     }
 }
 
