@@ -37,7 +37,7 @@ public class GovuaDownloader implements Downloadable {
     private final String PACKAGES_URL_PREFIX = "https://data.gov.ua/api/3/action/package_show?id=";
     private final String RESOURCES_URL_PREFIX = "https://data.gov.ua/api/3/action/resource_show?id=";
 
-    final static int MAX_RETRIES = 10;
+     static int MAX_RETRIES = 10;
 
     private final Properties properties;
 
@@ -64,6 +64,10 @@ public class GovuaDownloader implements Downloadable {
         stepUpdateDto.setProgress(0.0);
         stepUpdateDto.setComment("Початок завантаження");
         sendUpdate(stepUpdateDto);
+
+        if (parameters.get("retries") != null){
+            MAX_RETRIES = Integer.parseInt(parameters.get("retries"));
+        }
 
 
         StepResponseDto stepResponseDto = new StepResponseDto();
