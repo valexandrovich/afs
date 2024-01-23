@@ -4,7 +4,7 @@ import {routes} from "@/router/routes.js";
 
 <template>
   <aside class="flex flex-col custom-scrollbar from-green-500 text-white  to-green-900 w-64 bg-gradient-to-b  overflow-auto">
-    <span class="text-5xl font-extrabold text-gray-100 text-center mt-4">
+    <span class="text-5xl font-extrabold text-white text-center mt-4">
       <font-awesome-icon :icon="['fas', 'user-secret']"  />
       AFS
     </span>

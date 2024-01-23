@@ -25,9 +25,11 @@
     <modules>
         <module>db</module>
         <module>common</module>
+        <module>migrations</module>
         <module>cpms</module>
         <module>scheduler</module>
         <module>downloader</module>
+        <module>importer</module>
         <module>web-backend</module>
     </modules>
 

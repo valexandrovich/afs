@@ -1,0 +1,173 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0001-003
+      author: valex
+      changes:
+        - sql:
+            sql: |
+                insert into sys.stored_job(id, name, description, is_enabled)
+                values (nextval('sys.stored_job_id_seq'), 'Відомості про справи про банкрутство',
+                'Відомості про справи про банкрутство - Державна судова адміністрація України', true);
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 1, 'downloader', 'govua', true, false);
+                
+                insert into sys.stored_step_parameter(stored_step_id, key, value)
+                values (currval('sys.stored_step_id_seq'), 'packageId', 'vidomosti-pro-spravi-pro-bankrutstvo-1'),
+                (currval('sys.stored_step_id_seq'), 'retries', '10'),
+                (currval('sys.stored_step_id_seq'), 'sourceName', 'govua01');
+                
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 2, 'importer', 'govua01', true, false);
+                
+                
+                insert into sys.stored_job(id, name, description, is_enabled)
+                values (nextval('sys.stored_job_id_seq'),
+                'Дані про платників, що мають заборгованість із платежів до Пенсійного фонду України',
+                'Дані про платників, що мають заборгованість із платежів до Пенсійного фонду України - Пенсійний Фонд', true);
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 1, 'downloader', 'govua', true, false);
+                
+                insert into sys.stored_step_parameter(stored_step_id, key, value)
+                values (currval('sys.stored_step_id_seq'), 'packageId', '1e2d305c-6ecb-48d7-908c-b3c27b8a9acf'),
+                (currval('sys.stored_step_id_seq'), 'retries', '10'),
+                (currval('sys.stored_step_id_seq'), 'sourceName', 'govua02');
+                
+                
+                insert into sys.stored_job(id, name, description, is_enabled)
+                values (nextval('sys.stored_job_id_seq'), 'Інформація про суб’єктів господарювання, які мають податковий борг',
+                'Інформація про суб’єктів господарювання, які мають податковий борг - Державна податкова служба України', true);
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 1, 'downloader', 'govua', true, false);
+                
+                insert into sys.stored_step_parameter(stored_step_id, key, value)
+                values (currval('sys.stored_step_id_seq'), 'packageId', '0e347d45-4db5-44ee-a14a-533d7cf17d7b'),
+                (currval('sys.stored_step_id_seq'), 'retries', '10'),
+                (currval('sys.stored_step_id_seq'), 'sourceName', 'govua04');
+                
+                
+                insert into sys.stored_job(id, name, description, is_enabled)
+                values (nextval('sys.stored_job_id_seq'), 'Інформація з автоматизованої системи виконавчого провадження',
+                'Інформація з автоматизованої системи виконавчого провадження - Міністерство юстиції України', true);
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 1, 'downloader', 'govua', true, false);
+                
+                insert into sys.stored_step_parameter(stored_step_id, key, value)
+                values (currval('sys.stored_step_id_seq'), 'packageId', '6c0eb6c0-d19a-4bb0-869b-3280df46800a'),
+                (currval('sys.stored_step_id_seq'), 'retries', '10'),
+                (currval('sys.stored_step_id_seq'), 'sourceName', 'govua06');
+                
+                
+                insert into sys.stored_job(id, name, description, is_enabled)
+                values (nextval('sys.stored_job_id_seq'), 'Єдиний реєстр боржників',
+                'Єдиний реєстр боржників - Міністерство юстиції України', true);
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 1, 'downloader', 'govua', true, false);
+                
+                insert into sys.stored_step_parameter(stored_step_id, key, value)
+                values (currval('sys.stored_step_id_seq'), 'packageId', '506734bf-2480-448c-a2b4-90b6d06df11e'),
+                (currval('sys.stored_step_id_seq'), 'retries', '10'),
+                (currval('sys.stored_step_id_seq'), 'sourceName', 'govua07');
+                
+                
+                insert into sys.stored_job(id, name, description, is_enabled)
+                values (nextval('sys.stored_job_id_seq'), 'Інформація про осіб, які переховуються від органів влади',
+                'Інформація про осіб, які переховуються від органів влади - Міністерство внутрішніх справ України', true);
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 1, 'downloader', 'govua08', true, false);
+                
+                insert into sys.stored_step_parameter(stored_step_id, key, value)
+                values (currval('sys.stored_step_id_seq'), 'packageId', '7c51c4a0-104b-4540-a166-e9fc58485c1b'),
+                (currval('sys.stored_step_id_seq'), 'retries', '10'),
+                (currval('sys.stored_step_id_seq'), 'sourceName', 'govua08');
+                
+                
+                insert into sys.stored_job(id, name, description, is_enabled)
+                values (nextval('sys.stored_job_id_seq'), 'Інформація про безвісно зниклих громадян',
+                'Інформація про безвісно зниклих громадян - Міністерство внутрішніх справ України', true);
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 1, 'downloader', 'govua09', true, false);
+                
+                insert into sys.stored_step_parameter(stored_step_id, key, value)
+                values (currval('sys.stored_step_id_seq'), 'packageId', '470196d3-4e7a-46b0-8c0c-883b74ac65f0'),
+                (currval('sys.stored_step_id_seq'), 'retries', '10'),
+                (currval('sys.stored_step_id_seq'), 'sourceName', 'govua09');
+                
+                
+                insert into sys.stored_job(id, name, description, is_enabled)
+                values (nextval('sys.stored_job_id_seq'), 'Паспорти громадянина України, які визнані недійсними ',
+                'Паспорти громадянина України, які визнані недійсними  - Державна міграційна служба України', true);
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 1, 'downloader', 'govua', true, false);
+                
+                insert into sys.stored_step_parameter(stored_step_id, key, value)
+                values (currval('sys.stored_step_id_seq'), 'packageId', '44e1d462-5de4-40e5-b722-46f2aa9a1e810'),
+                (currval('sys.stored_step_id_seq'), 'retries', '10'),
+                (currval('sys.stored_step_id_seq'), 'sourceName', 'govua10');
+                
+                
+                insert into sys.stored_job(id, name, description, is_enabled)
+                values (nextval('sys.stored_job_id_seq'), 'Паспорти громадянина України для виїзду за кордон, які визнані недійсними',
+                'Паспорти громадянина України для виїзду за кордон, які визнані недійсними - Державна міграційна служба України',
+                true);
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 1, 'downloader', 'govua', true, false);
+                
+                insert into sys.stored_step_parameter(stored_step_id, key, value)
+                values (currval('sys.stored_step_id_seq'), 'packageId', '672e0841-e1a2-47ec-b8d4-22839c71f4b3'),
+                (currval('sys.stored_step_id_seq'), 'retries', '10'),
+                (currval('sys.stored_step_id_seq'), 'sourceName', 'govua11');
+                
+                
+                insert into sys.stored_job(id, name, description, is_enabled)
+                values (nextval('sys.stored_job_id_seq'),
+                'Інформація про паспорти громадянина України по яких зареєстровано заяви щодо викрадання чи втрати. А також інформація про паспорти громадянина України, визнані недійсними',
+                'Інформація про паспорти громадянина України по яких зареєстровано заяви щодо викрадання чи втрати. А також інформація про паспорти громадянина України, визнані недійсними - Міністерство внутрішніх справ України',
+                true);
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 1, 'downloader', 'govua', true, false);
+                
+                insert into sys.stored_step_parameter(stored_step_id, key, value)
+                values (currval('sys.stored_step_id_seq'), 'packageId', 'ab09ed00-4f51-4f6c-a2f7-1b2fb118be0f'),
+                (currval('sys.stored_step_id_seq'), 'retries', '10'),
+                (currval('sys.stored_step_id_seq'), 'sourceName', 'govua12');
+                
+                
+                insert into sys.stored_job(id, name, description, is_enabled)
+                values (nextval('sys.stored_job_id_seq'),
+                'Інформація про паспорти громадянина України для виїзду за кордон по яких зареєстровано заяви щодо викрадання чи втрати. А також інформація про паспорти громадянина України для виїзду за кордон, визнані недійсними',
+                'Інформація про паспорти громадянина України для виїзду за кордон по яких зареєстровано заяви щодо викрадання чи втрати. А також інформація про паспорти громадянина України для виїзду за кордон, визнані недійсними - Міністерство внутрішніх справ України',
+                true);
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 1, 'downloader', 'govua', true, false);
+                
+                insert into sys.stored_step_parameter(stored_step_id, key, value)
+                values (currval('sys.stored_step_id_seq'), 'packageId', 'b465b821-db5d-4b8b-8131-12682fab2203'),
+                (currval('sys.stored_step_id_seq'), 'retries', '10'),
+                (currval('sys.stored_step_id_seq'), 'sourceName', 'govua13');
+                
+                
+                insert into sys.stored_job(id, name, description, is_enabled)
+                values (nextval('sys.stored_job_id_seq'),
+                'Єдиний державний реєстр осіб, які вчинили корупційні або пов''язані з корупцією правопорушення',
+                'Єдиний державний реєстр осіб, які вчинили корупційні або пов''язані з корупцією правопорушення - Національне агентство з питань запобігання корупції',
+                true);
+                
+                insert into sys.stored_step(id, stored_job_id, step_order, service_name, worker_name, is_enabled, is_skipable)
+                values (nextval('sys.stored_step_id_seq'), currval('sys.stored_job_id_seq'), 1, 'downloader', 'govua', true, false);
+                
+                insert into sys.stored_step_parameter(stored_step_id, key, value)
+                values (currval('sys.stored_step_id_seq'), 'packageId', 'c29e704a-b745-4669-97cd-3a345f437ad1'),
+                (currval('sys.stored_step_id_seq'), 'retries', '10'),
+                (currval('sys.stored_step_id_seq'), 'sourceName', 'govua14');

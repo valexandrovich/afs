@@ -48,7 +48,8 @@ library.add(faCircleExclamation)
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons'
 library.add(faCircleCheck)
 
-
+import { faPlay } from '@fortawesome/free-solid-svg-icons'
+library.add(faPlay)
 
 
 

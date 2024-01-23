@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0001-004
+      author: valex
+      changes:
+        - sql:
+            sql: |
+              create table red.govua_01
+                (
+                id                    uuid not null primary key,
+                revision_id           bigint,
+                number                bigint,
+                date                  date,
+                type                  varchar(255),
+                firm_edrpou           varchar(255),
+                firm_name             varchar(255),
+                case_number           varchar(255),
+                start_date_auc        date,
+                end_date_auc          date,
+                court_name            varchar(255),
+                end_registration_date date,
+                created_at            timestamp(6),
+                hash                  uuid constraint govua_01__full__hash unique
+                );
+

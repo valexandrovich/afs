@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0001-001
+      author: valex
+      changes:
+        - sql:
+            sql: |
+              create schema if not exists red;
+              create schema if not exists data;
+              create schema if not exists stage;
+             

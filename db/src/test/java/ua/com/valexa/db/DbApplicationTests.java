@@ -3,7 +3,9 @@ package ua.com.valexa.db;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import ua.com.valexa.db.model.TestEntity;
 import ua.com.valexa.db.model.red.GovUa01;
+import ua.com.valexa.db.repository.TestEntityRepository;
 import ua.com.valexa.db.repository.red.GovUa01Repository;
 
 import java.util.UUID;
@@ -30,13 +32,17 @@ class DbApplicationTests {
 
     }
 
+
+    @Autowired
+    TestEntityRepository testEntityRepository;
+
     @Test
     void tst3(){
-        GovUa01 r = new GovUa01();
-        r.setCaseNumber("asdasd");
-        r.setCourtName("asdasd");
 
-        System.out.println(r.hashCode());
+        TestEntity t = new TestEntity();
+        t.setField("asd");
+        t = testEntityRepository.save(t);
+
     }
 
 }

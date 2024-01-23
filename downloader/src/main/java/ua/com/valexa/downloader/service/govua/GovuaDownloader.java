@@ -237,13 +237,16 @@ public class GovuaDownloader implements Downloadable {
                 }
 
                 if (!chunkDownloaded) {
-                    throw new IOException("Failed to download chunk after " + MAX_RETRIES + " retries.");
+                    throw new IOException("Не вдалося завантажити файл після " + MAX_RETRIES + " спроб");
                 }
             }
             log.debug("File downloaded: " + filename);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
+            stepUpdateDto.setComment(e.getMessage());
+            stepUpdateDto.setStatus(StepStatus.FAILED);
+            sendUpdate(stepUpdateDto);
         }
     }
 

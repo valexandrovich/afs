@@ -1,0 +1,69 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0001-002
+      author: valex
+      changes:
+        - sql:
+            sql: |
+              create table sys.stored_job
+                (
+                id          bigserial primary key,
+                name        varchar(255),
+                description text,
+                is_enabled  boolean
+                );
+
+
+              create table sys.stored_step
+                (
+                id            bigserial
+                primary key,
+                stored_job_id bigint
+                constraint stored_step__stored_job__fk references sys.stored_job,
+                step_order    integer,
+                service_name  varchar(255),
+                worker_name   varchar(255),
+                is_enabled    boolean,
+                is_skipable   boolean
+                );
+
+
+              create table sys.stored_step_parameter
+                (
+                stored_step_id bigint not null constraint stored_step_parameter__stored_step__fk references sys.stored_step,
+                key            varchar(255) not null,
+                value          varchar(255),
+                primary key (stored_step_id, key)
+                );
+
+              create table sys.job
+                (
+                id             bigserial primary key,
+                stored_job_id  bigint constraint job__stored_job__fk references sys.stored_job,
+                started_at     timestamp(6),
+                finished_at    timestamp(6),
+                initiator_name varchar(255)
+                );
+
+
+              create table sys.job_result
+                (
+                job_id bigint not null constraint job_result__job__fk references sys.job,
+                key    varchar(255) not null,
+                value  varchar(255),
+                primary key (job_id, key)
+                );
+
+              create table sys.step
+                (
+                id bigserial primary key,
+                job_id bigint constraint step__job__fk references sys.job,
+                started_at     timestamp(6),
+                finished_at    timestamp(6),
+                progress       double precision,
+                status         varchar(255),
+                comment        text,
+                stored_step_id bigint constraint step__stored_step__fk references sys.stored_step
+                );
+
+             

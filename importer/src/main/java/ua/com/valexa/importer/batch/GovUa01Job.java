@@ -195,7 +195,7 @@ public class GovUa01Job {
     @StepScope
     public JdbcBatchItemWriter<GovUa01> govUa01writer() {
         return new JdbcBatchItemWriterBuilder<GovUa01>()
-                .sql("insert into red.govua01 (" +
+                .sql("insert into red.govua_01 (" +
                         "id, number, date, type, firm_edrpou, case_number, court_name, created_at, revision_id, end_date_auc, end_registration_date, firm_name, hash, start_date_auc) " +
                         "VALUES (:id, :number, :date, :type, :firmEdrpou, :caseNumber, :courtName, :createdAt, :revisionId, :endDateAuc, :endRegistrationDate, :firmName, :hash, :startDateAuc) ")
                 .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
