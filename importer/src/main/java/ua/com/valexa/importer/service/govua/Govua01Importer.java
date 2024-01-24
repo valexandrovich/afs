@@ -7,6 +7,7 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,7 +66,12 @@ public class Govua01Importer implements Importable {
             JobExecution jobExecution =  jobLauncher.run(job, jp);
 
             if (jobExecution.getStatus().equals(BatchStatus.COMPLETED)){
-                stepUpdateDto.setComment("Файл імпортовано");
+
+                ExecutionContext executionContext = jobExecution.getExecutionContext();
+
+                String jobComment = executionContext.getString("comment");
+
+                stepUpdateDto.setComment("Файл імпортовано: " + jobComment);
                 stepUpdateDto.setProgress(1);
                 stepUpdateDto.setStatus(StepStatus.FINISHED);
                 sendUpdate(stepUpdateDto);

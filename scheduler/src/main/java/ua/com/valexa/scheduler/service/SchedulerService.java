@@ -75,6 +75,11 @@ public class SchedulerService {
                     rabbitTemplate.convertAndSend("importer", stepRequestDto);
                     break;
                 }
+                case "transformer": {
+                    log.debug("Sending to : " + "transformer : " + stepRequestDto);
+                    rabbitTemplate.convertAndSend("transformer", stepRequestDto);
+                    break;
+                }
                 default: {
                     log.info("Can't find desired service for handling step: " + step);
                 }
@@ -152,6 +157,11 @@ public class SchedulerService {
                     case "importer": {
                         log.debug("Sending to : " + "importer : " + stepRequestDto);
                         rabbitTemplate.convertAndSend("importer", stepRequestDto);
+                        break;
+                    }
+                    case "transformer": {
+                        log.debug("Sending to : " + "transformer : " + stepRequestDto);
+                        rabbitTemplate.convertAndSend("transformer", stepRequestDto);
                         break;
                     }
                     default: {

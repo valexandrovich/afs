@@ -30,8 +30,8 @@
         <module>scheduler</module>
         <module>downloader</module>
         <module>importer</module>
-        <module>transformer</module>
         <module>web-backend</module>
+        <module>transformer</module>
     </modules>
 
 </project>
